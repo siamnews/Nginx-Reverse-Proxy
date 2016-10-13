@@ -370,7 +370,7 @@ case $option in
 		--group=nginx"
 
 		NGINX_MODULES="--without-http_ssi_module \
-		--with-http_scgi_module \
+		--without-http_scgi_module \
 		--without-http_uwsgi_module \
 		--without-http_geo_module \
 		--without-http_split_clients_module \
