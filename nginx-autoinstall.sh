@@ -13,18 +13,18 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 # Variables
-NGINX_VER=1.11.4
-LIBRESSL_VER=2.4.2
+NGINX_VER=1.11.6
+LIBRESSL_VER=2.4.4
 OPENSSL_VER=1.0.2h
 NPS_VER=1.11.33.4
-HEADERMOD_VER=0.31
+HEADERMOD_VER=0.32
 
 clear
 echo ""
 echo "Welcome to the nginx-autoinstall script."
 echo ""
 echo "What do you want to do?"
-echo "   1) Install Nginx"
+echo "   1) Install or update Nginx"
 echo "   2) Uninstall Nginx"
 echo "   3) Update the script"
 echo ""
@@ -49,12 +49,6 @@ case $option in
 		done
 		while [[ $GEOIP !=  "y" && $GEOIP != "n" ]]; do
 			read -p "       GeoIP [y/n]: " -e GEOIP
-		done
-		while [[ $SPDY !=  "y" && $SPDY != "n" ]]; do
-			read -p "       Cloudflare's HTTP/2 + SPDY patch [y/n]: " -e SPDY
-		done
-		while [[ $TCP !=  "y" && $TCP != "n" ]]; do
-			read -p "       Cloudflare's TLS Dynamic Record Resizing patch [y/n]: " -e TCP
 		done
 		echo ""
 		echo "Choose your OpenSSL implementation :"
@@ -367,7 +361,9 @@ case $option in
 		--http-proxy-temp-path=/var/cache/nginx/proxy_temp \
 		--http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
 		--user=nginx \
-		--group=nginx"
+                --group=nginx \
+                --with-cc-opt=-Wno-deprecated-declarations"
+
 
 		NGINX_MODULES="--without-http_ssi_module \
 		--without-http_scgi_module \
@@ -381,7 +377,6 @@ case $option in
 		--with-file-aio \
 		--with-http_ssl_module \
 		--with-http_v2_module \
-		--with-ipv6 \
 		--with-http_mp4_module \
 		--with-http_auth_request_module \
 		--with-http_slice_module \
@@ -417,37 +412,6 @@ case $option in
 		# OpenSSL
 		if [[ "$OPENSSL" = 'y' ]]; then
 			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--with-openssl=/usr/local/src/openssl-${OPENSSL_VER}")
-		fi
-
-		# Cloudflare's SPDY + HTTP/2 patch
-		if [[ "$SPDY" = 'y' ]]; then
-			echo -ne "       Adding SPDY support            [..]\r"
-			wget https://raw.githubusercontent.com/felixbuenemann/sslconfig/updated-nginx-1.9.15-spdy-patch/patches/nginx_1_9_15_http2_spdy.patch -O spdy.patch &>/dev/null
-			patch -p1 < spdy.patch &>/dev/null
-			NGINX_MODULES=$(echo $NGINX_MODULES; echo "--with-http_spdy_module")
-		        
-			if [ $? -eq 0 ]; then
-				echo -ne "       Adding SPDY support            [${CGREEN}OK${CEND}]\r"
-				echo -ne "\n"
-			else
-				echo -e "       Adding SPDY support            [${CRED}FAIL${CEND}]"
-				exit 1
-			fi
-		fi
-
-		# Cloudflare's TLS Dynamic Record Resizing patch
-		if [[ "$TCP" = 'y' ]]; then
-			echo -ne "       TLS Dynamic Records support    [..]\r"
-			wget https://raw.githubusercontent.com/cloudflare/sslconfig/master/patches/nginx__dynamic_tls_records.patch -O tcp-tls.patch &>/dev/null
-			patch -p1 < tcp-tls.patch &>/dev/null
-		        
-			if [ $? -eq 0 ]; then
-				echo -ne "       TLS Dynamic Records support    [${CGREEN}OK${CEND}]\r"
-				echo -ne "\n"
-			else
-				echo -e "       TLS Dynamic Records support    [${CRED}FAIL${CEND}]"
-				exit 1
-			fi
 		fi
 
 		# We configure Nginx
@@ -589,7 +553,7 @@ case $option in
 		wget https://raw.githubusercontent.com/Angristan/nginx-autoinstall/master/nginx-autoinstall.sh -O nginx-autoinstall.sh &>/dev/null
 		chmod +x nginx-autoinstall.sh
 		echo ""
-		echo -e "       ${CGREEN}Update succcessful !${CEND}"
+		echo -e "${CGREEN}Update succcessful !${CEND}"
 		sleep 2
 		./nginx-autoinstall.sh
 	exit
