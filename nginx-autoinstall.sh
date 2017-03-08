@@ -12,11 +12,12 @@ if [[ "$EUID" -ne 0 ]]; then
 	exit 1
 fi
 
+
 # Variables
-NGINX_VER=1.11.6
-LIBRESSL_VER=2.4.4
+NGINX_VER=1.11.10
+LIBRESSL_VER=2.5.1
 OPENSSL_VER=1.1.0e
-NPS_VER=1.11.33.4
+NPS_VER=1.12.34.2
 HEADERMOD_VER=0.32
 
 clear
